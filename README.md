@@ -12,23 +12,12 @@
 
 <https://github.com/user-attachments/assets/b6a7d60c-4ca2-46e0-8f4f-d66c567e2e98>
 
-[<img src="assets/download-video.png" width="266" alt="下载视频 MOV">](https://github.com/HRuiCcc/RuiC-pixel-explainer/raw/main/example/demo-20s.mov)
-
-<sub>上面是 GitHub 内联播放器（有声，可全屏）；要存档就点按钮下载 MOV（20 秒 / 1920×1080 / 30fps）。下面是无声循环预览。</sub>
-
-<img src="example/demo-preview.gif" width="620" alt="无声预览（全片 20 秒）">
+[<img src="assets/download-video.png" width="266" alt="下载视频 MOV">](https://github.com/HRuiCcc/RuiC-pixel-explainer/raw/main/demo-20s.mov)
 
 剪映「真人播客女」音色（`zh_female_mizai_saturn_bigtts`），逐句合成后 1.08 倍速；字幕与说话区间按各句实测时长排。
 
 > **大人物 0–10 秒**：收藏了一堆干货，真要用时，却想不起来。／ 存下来，不等于学会了。／ 你缺的，是一次提取。
 > **小人物 10–20 秒**：合上笔记，先答一道题。／ 卡住做标记，马上对答案。／ 答出来，钥匙才真正属于你。
-
-| 大人物 · 修理铺开场 | 资料入库 → 检索不到 | 小人物关卡 · 标记卡点 | 对答案 → 拿到钥匙 |
-|---|---|---|---|
-| ![f1](example/stills/t-2_8.png) | ![f2](example/stills/t-8_2.png) | ![f3](example/stills/t-14_3.png) | ![f4](example/stills/t-19_1.png) |
-
-这一版新增的内容动作：资料卡飞入并增加库存 → 检索槽查不到内容 → 库存与能力形成对照 → 合上笔记出题 → 错误尝试被标记 → 展开参考答案 → 修正后获得经验 → 奖励钥匙与开门。
-反馈板与题目板**和人物行走路径错开**，奖励文字按卡片宽度适配。工程全套在 [`example/`](example/)（`episode.json` 存文案与事件、`scene.mjs` 绘人物场景、`components.mjs` 是可复用组件）。
 
 ---
 
@@ -104,8 +93,9 @@ RuiC-pixel-explainer/
 │  └─ stills.mjs                静帧质检（渲片前必跑）
 ├─ assets/
 │  ├─ cinematic-template/       自包含粗像素样板（原生 1920×1080 + 字体 + 20s 示范配音）
+│  ├─ download-video.png        演示段那个「下载视频」按钮图
 │  └─ wechat-donate.png
-└─ example/                     本期《收藏不等于学会》的成片 + 可改工程 + 关键静帧
+└─ demo-20s.mov                 示范成片（20 秒 / 1920×1080 / 30fps / 带配音）
 ```
 
 ## 🔧 装到本机
