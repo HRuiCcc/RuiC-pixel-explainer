@@ -10,11 +10,8 @@
 
 ## 🎬 演示 ·《收藏不等于学会》20 秒
 
-<video src="https://github.com/HRuiCcc/RuiC-pixel-explainer/raw/main/example/demo-20s.mp4" controls muted playsinline width="100%" poster="example/stills/t-2_8.png"></video>
-
-![演示预览（大人物开场 → 检索失败 → 答题拿钥匙）](example/demo-preview.gif)
-
-[▶ 观看成片（20.0s / 600 帧 / 1920×1080 / 30fps，带声音）](example/demo-20s.mp4)
+<!-- 内联播放：等 MOV 传成 GitHub 附件后，这里放一行尖括号链接（GitHub 会自动渲染成播放器） -->
+[▶ 观看成片（20.0s / 600 帧 / 1920×1080 / 30fps，带声音）](example/demo-20s.mov)
 
 剪映「真人播客女」音色（`zh_female_mizai_saturn_bigtts`），逐句合成后 1.08 倍速；字幕与说话区间按各句实测时长排。
 
