@@ -1,0 +1,34 @@
+{
+  "duration": 20,
+  "frames": 600,
+  "width": 1920,
+  "height": 1080,
+  "fps": "30/1",
+  "audioCodec": "aac",
+  "narrationSpeaker": "真人播客女",
+  "speakerId": "zh_female_mizai_saturn_bigtts",
+  "narrationRate": 1.08,
+  "firstScene": [
+    0,
+    10
+  ],
+  "secondScene": [
+    10,
+    20
+  ],
+  "sampleDeterminismPassed": 5,
+  "rewardTailDeterminismPassed": 5,
+  "mp4SHA256": "eb563244c2de2d1366ac0e047326406da0242bdaacc90e1b858afd11c90d0af3",
+  "voiceAndCopyWrittenToSkill": false,
+  "skillSampleVoiceAndEpisodeUnchanged": true,
+  "newComponentKinds": [
+    "paper",
+    "inventory",
+    "recall",
+    "book",
+    "quiz",
+    "marker",
+    "feedback",
+    "reward"
+  ]
+}

@@ -14,7 +14,7 @@ const arg = (n, d = '') => {const i = argv.indexOf(`--${n}`); return i >= 0 ? (a
 const url = arg('url', 'http://127.0.0.1:5273/');
 const outDir = path.resolve(arg('out', 'stills'));
 const ep = arg('ep');
-const dsf = Number(arg('dsf', '1'));
+const dsf = Number(arg('dsf', '1.5'));
 const times = arg('times', '0').split(',').map(Number).filter((x) => Number.isFinite(x));
 
 const home = homedir();

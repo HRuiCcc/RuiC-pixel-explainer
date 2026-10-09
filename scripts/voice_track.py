@@ -21,19 +21,28 @@ lines.json 格式（at = 该句在**整片**时间轴上的毫秒位置）：
 换音色：--speaker 曼波讲故事 / 台湾腔甜妹 …（全表见 jianying-tts 技能）；
 换 TTS 后端：--tts-cmd "python3 /path/to/your_tts.py"（约定：`<cmd> <文本> --out <文件>`）。
 """
-import argparse, json, shutil, subprocess, sys
+import argparse, hashlib, json, shutil, subprocess, sys
 from pathlib import Path
 
 DEFAULT_TTS = Path.home() / '.agents/skills/jianying-tts/scripts/jy_tts.py'
 
 
 def tts(text, out, cmd, speaker):
-    if out.exists():
-        return
+    identity = hashlib.sha256(json.dumps({'text': text, 'speaker': speaker, 'command': str(cmd)}, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    metadata = out.with_suffix(out.suffix + '.cache.json')
+    if out.exists() and metadata.exists():
+        try:
+            if json.loads(metadata.read_text()).get('identity') == identity:
+                return
+        except (ValueError, OSError):
+            pass
     args = ['python3', str(cmd), text, '--out', str(out)]
     if speaker:
         args += ['--speaker', speaker]
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
+    if not out.is_file() or out.stat().st_size == 0:
+        raise RuntimeError(f'TTS did not produce audio: {out}')
+    metadata.write_text(json.dumps({'identity': identity}, ensure_ascii=False))
 
 
 def duration(path):
@@ -49,6 +58,7 @@ def main():
     ap.add_argument('--speaker', default='', help='TTS 音色名（默认剪映默认音色）')
     ap.add_argument('--tts-cmd', default=str(DEFAULT_TTS))
     ap.add_argument('--tts-only', action='store_true', help='只合成 + 报时长，不拼轨')
+    ap.add_argument('--allow-overlap', action='store_true', help='仅在明确需要叠声时允许段落重叠')
     ap.add_argument('--tail', type=int, default=1000, help='最后一句之后留的余量（毫秒）；宁可长一点，渲片时会按画面补齐')
     a = ap.parse_args()
 
@@ -73,8 +83,8 @@ def main():
                       'overlaps': problems}, ensure_ascii=False, indent=2))
     if a.tts_only:
         return
-    if problems:
-        print('⚠️ 有句子压到下一句了，先按 overlaps 里的 suggestNextAt 调时间码再拼轨', file=sys.stderr)
+    if problems and not a.allow_overlap:
+        sys.exit('句子重叠，已停止拼轨。按 overlaps 调整时间码；明确需要叠声时才使用 --allow-overlap。')
     if not a.out:
         sys.exit('要拼轨就得给 --out')
 

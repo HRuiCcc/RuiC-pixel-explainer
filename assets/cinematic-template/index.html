@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>记忆的钥匙 · 粗像素电影场景</title><link rel="stylesheet" href="assets/fonts/Fusion-Pixel-12px-Proportional-Simplified-Chinese.css"><style>
+*{box-sizing:border-box}body{margin:0;background:#050806;color:#dbc69a;font:13px -apple-system,'PingFang SC',sans-serif;overflow:hidden}.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}.frame{width:1920px;height:1080px;position:relative;transform-origin:center;flex:none}.frame canvas{display:block;width:1920px;height:1080px}.loading{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;background:#080d09;z-index:3}.controls{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:9px;padding:8px 12px;background:#112019ee;align-items:center;border:1px solid #435342;z-index:5;max-width:95vw}.controls button{color:#ddc995;background:#253328;border:1px solid #576b4c;padding:7px 11px;cursor:pointer}.controls input{width:min(43vw,550px);accent-color:#d8b669}.controls small{white-space:nowrap}.rec .controls{display:none}a{color:#ccb373}
+</style></head><body><div class="viewport"><div class="frame"><canvas width="1920" height="1080" id="stage"></canvas><div class="loading">正在布置钟表修理铺…</div></div></div><div class="controls"><button id="play">▶</button><input id="seek" type="range" min="0" max="19999" step="1" value="0" aria-label="时间轴"><small id="time">00:00 / 00:20</small><button id="mute">声音 开</button></div><audio src="assets/voice.wav" id="audio" preload="metadata"></audio><script type="module">
+import {CinematicScene} from './scene.mjs';
+import {componentGlyphs} from './components.mjs';
+const ep=await fetch('./episode.json').then(r=>r.json());
+const glyphs=[ep.title,ep.author,ep.actor.name,componentGlyphs,...Object.values(ep.componentLabels||{}),...ep.chapters,...ep.lines.map(l=>l.text),'笔记 · 已保存记住了？已提取 · 能讲出来记忆'].join('');
+await document.fonts.load('72px "Fusion Pixel 12px Proportional Simplified Chinese"',glyphs);await document.fonts.ready;
+const painter=new CinematicScene(ep),canvas=document.getElementById('stage'),audio=document.getElementById('audio');const params=new URLSearchParams(location.search);let ms=Math.min(ep.durationMs-1,Math.max(0,Number(params.get('t'))||0)),playing=false;
+if(params.get('rec')==='1')document.body.classList.add('rec');
+function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);document.querySelector('.frame').style.transform=`scale(${k})`;}fit();addEventListener('resize',fit);
+function set(t){ms=Math.max(0,Math.min(ep.durationMs-1,t));painter.draw(canvas,ms);document.getElementById('seek').value=ms;document.getElementById('time').textContent=`00:${String(Math.floor(ms/1000)).padStart(2,'0')} / 00:20`;}
+window.__player={set,get:()=>ms,total:ep.durationMs,rec:params.get('rec')==='1',episode:ep};set(ms);document.querySelector('.loading').remove();
+function pause(){playing=false;audio.pause();document.getElementById('play').textContent='▶';}
+async function play(){audio.currentTime=ms/1000;await audio.play();playing=true;document.getElementById('play').textContent='Ⅱ';}
+document.getElementById('play').onclick=()=>playing?pause():play();document.getElementById('seek').oninput=e=>{pause();set(Number(e.target.value))};document.getElementById('mute').onclick=()=>{audio.muted=!audio.muted;document.getElementById('mute').textContent=audio.muted?'声音 关':'声音 开';};
+audio.onended=()=>{pause();set(ep.durationMs-1)};function tick(){if(playing)set(audio.currentTime*1000);requestAnimationFrame(tick)}tick();
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();playing?pause():play()}if(e.key==='ArrowLeft'){pause();set(ms-1000/ep.fps)}if(e.key==='ArrowRight'){pause();set(ms+1000/ep.fps)}});
+</script></body></html>

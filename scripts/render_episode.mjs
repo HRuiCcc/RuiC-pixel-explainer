@@ -27,7 +27,9 @@ const url = arg('url', 'http://127.0.0.1:5273/');
 const out = path.resolve(arg('out', 'episode.mp4'));
 const ep = arg('ep');
 const fps = Number(arg('fps', '30'));
-const dsf = Number(arg('dsf', '2'));
+const dsf = Number(arg('dsf', '1.5'));
+const threads = Number(arg('threads', '2'));
+if(!Number.isInteger(threads)||threads<1||threads>4)throw new Error('--threads must be an integer from 1 to 4');
 const size = arg('size', '1920x1080');
 const audio = arg('audio');
 const crf = arg('crf', '16');
@@ -67,6 +69,13 @@ const settle = () => page.evaluate(() => new Promise((r) => requestAnimationFram
 const shoot = async (frame) => {
   await page.evaluate((ms) => window.__player.set(ms), (frame / fps) * 1000);
   await settle();
+  if(await page.evaluate(()=>document.fonts.status==='loading')){
+    await page.evaluate(()=>document.fonts.ready);
+    await page.evaluate((ms)=>window.__player.set(ms+0.001),(frame/fps)*1000);
+    await settle();
+    await page.evaluate((ms)=>window.__player.set(ms),(frame/fps)*1000);
+    await settle();
+  }
   return page.locator('.frame').screenshot({type: 'png'});
 };
 
@@ -79,6 +88,7 @@ if (verifyRepeat > 0) {
     const b = createHash('sha256').update(await shoot(f)).digest('hex');
     if (a !== b) worst++;
   }
+  if(worst>0) {await browser.close();throw new Error(`Deterministic rendering failed on ${worst} sampled frames; fix wall-clock/CSS animations before exporting`);}
   console.log(worst === 0 ? `确定性自检通过（${picks.length} 帧各截两次，字节一致）` : `⚠️ 确定性自检失败：${worst}/${picks.length} 帧两次截得不一样`);
 }
 
@@ -91,8 +101,8 @@ const [wantW, wantH] = size.split('x').map(Number);
 
 const args = ['-hide_banner', '-loglevel', 'error', '-f', 'image2pipe', '-vcodec', 'png', '-framerate', String(fps), '-i', '-'];
 if (audio) args.push('-i', audio);
-args.push('-c:v', 'libx264', '-preset', 'medium', '-crf', crf, '-pix_fmt', 'yuv420p');
-if (wantW !== shotW || wantH !== shotH) args.push('-vf', `scale=${wantW}:${wantH}:flags=lanczos`);
+args.push('-c:v', 'libx264', '-threads', String(threads), '-preset', 'medium', '-crf', crf, '-pix_fmt', 'yuv420p');
+if (wantW !== shotW || wantH !== shotH) args.push('-vf', `scale=${wantW}:${wantH}:flags=neighbor`);
 if (audio) {
   // 音轨比画面短时不许吃掉画面尾巴：补齐静音到画面长度（音轨自己长一点也行）
   args.push('-af', 'apad', '-c:a', 'aac', '-b:a', '192k', '-t', (frameCount / fps).toFixed(3));
