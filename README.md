@@ -10,8 +10,11 @@
 
 ## 🎬 演示 ·《收藏不等于学会》20 秒
 
-<!-- 内联播放：等 MOV 传成 GitHub 附件后，这里放一行尖括号链接（GitHub 会自动渲染成播放器） -->
-[▶ 观看成片（20.0s / 600 帧 / 1920×1080 / 30fps，带声音）](example/demo-20s.mov)
+![演示（全片 20 秒）](example/demo-preview.gif)
+
+[<img src="assets/download-video.png" width="280" alt="下载视频 MOV">](https://github.com/HRuiCcc/RuiC-pixel-explainer/raw/main/example/demo-20s.mov)
+
+<sub>GIF 是无声预览（全片 20 秒）；有声成片点上面按钮下载 MOV，或到 [`example/demo-20s.mov`](example/demo-20s.mov) 页面里在线看。</sub>
 
 剪映「真人播客女」音色（`zh_female_mizai_saturn_bigtts`），逐句合成后 1.08 倍速；字幕与说话区间按各句实测时长排。
 
