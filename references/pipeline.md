@@ -72,10 +72,77 @@ export const m01: SceneDef = {
 `src/scenes/index.ts` 的 `EPISODES` 里加一个 `pack(...)`（id / tab / 标题 / 副标题 / 署名 / 三件事 / 章节 / 场景数组）。
 时间轴（offsets/total）由各场景 `dur` 自动累加 —— **所以 `dur` 错了，字幕和配音就全错位**。
 
-## 5. 配音与时间轴（先量后填，别拍脑袋）
+## 5. 配音与时间轴（后端自带，先量后填）
+
+**本技能不带任何内置音色。** 配音后端由使用者自己提供 —— 一个"给文本、还音频"的 HTTP 接口，或一条本地 TTS 命令；脚本只做三件事：逐句调用你的后端 → 量出真实时长 → 按时间码拼轨。
+
+先跑一次 `--check` 合成一句试听，确认接好了再开始逐句：
 
 ```bash
-# ① 逐句 TTS（默认剪映默认音色；音色表见 jianying-tts 技能）
+python3 scripts/voice_track.py --check
+```
+
+### 5.1 接法 A：HTTP API
+
+脚本对接口的约定（请求）：
+
+```
+POST <你的 URL>
+Authorization: Bearer <key>          # 给了 key 才带
+Content-Type: application/json
+{"text": "要合成的一句", "voice": "音色标识（没配就不带）"}
+```
+
+返回以下任一种都认（字段名不按默认给，就用配置的 `audio_field` 指定）：
+
+| 返回形态 | 例子 |
+|---|---|
+| 音频字节 | `Content-Type: audio/mpeg`，body 即 mp3/wav 字节 |
+| JSON + 直链 | `{"audio_url": "https://…/a.mp3"}`（也认 `url` / `audio` 给直链） |
+| JSON + base64 | `{"audio_base64": "…"}`；往一层里找也认（`{"data": {"audio": "…"}}`） |
+
+```bash
+python3 scripts/voice_track.py --tts-api https://your-tts/api --tts-api-key sk-… --check
+```
+
+（HTTP 走系统自带的 `curl` 发请求，不走 Python 的证书链，少踩 SSL/代理的坑。）
+
+请求体字段名不一样（比如要叫 `speaker` / `input`）就在配置里改 `body` 模板，`{text}` `{voice}` 会被替换：
+
+```json
+{"type": "http", "url": "https://your-tts/api", "key": "sk-…", "voice": "你的音色",
+ "body": {"text": "{text}", "speaker": "{voice}"}, "audio_field": "audio",
+ "headers": {"X-Client": "pixel-explainer"}, "timeout": 120}
+```
+
+（要挂代理加 `"proxy": "http://127.0.0.1:7890"`；接口用自签证书加 `"insecure": true`。）
+
+### 5.2 接法 B：本地 TTS 命令
+
+```bash
+python3 scripts/voice_track.py --tts-cmd "your-tts --out {out} --text {text} --voice {voice}" --check
+```
+
+- 模板含 `{text}` / `{out}` / `{voice}` 占位符就按模板原样执行（参数名随你的 CLI）；**`{out}` 必须有**。
+- 没有占位符时按约定追加：`<cmd> <文本> --out <文件>`，音色非空再加 `--voice <音色>`。
+- 只给一个 `.py` 路径也行（自动用 `python3` 跑）。
+
+### 5.3 配置从哪来（优先级：命令行 > 环境变量 > 配置文件）
+
+| 位置 | 写法 |
+|---|---|
+| 命令行 | `--tts-api` / `--tts-cmd` / `--tts-api-key` / `--voice`（`--speaker` 同义） |
+| 环境变量 | `TTS_API_URL` / `TTS_CMD` / `TTS_API_KEY` / `TTS_VOICE` / `TTS_CONFIG` |
+| 配置文件 | `tts.config.json`：`--tts-config` 指定 → `$TTS_CONFIG` → `<work>/` → 当前目录 → `~/.config/ruic-pixel-explainer/tts.json` |
+
+key 放配置文件或环境变量，别写进要提交的工程里。
+
+**已经有成品音轨**（真人录音、别的工具合成）就跳过合成，直接进第 6 步把 `--audio` 指过去；但字幕与动作仍要按它的真实时长排，用 `ffprobe` 量。
+
+### 5.4 步骤
+
+```bash
+# ① 逐句 TTS + 报真实时长（定时间轴用）
 python3 scripts/voice_track.py --lines lines.json --work <工作目录> --tts-only
 #    输出每句真实时长 → 按它排：句子间隔 250~400ms，尾句后留 600~900ms
 # ② 定好时间码后拼一条整轨（at = 整片时间轴上的绝对毫秒）
@@ -84,8 +151,8 @@ python3 scripts/voice_track.py --lines lines-abs.json --work <工作目录> --ou
 
 - `lines.json`：`[{"at": 450, "text": "它答得越顺，你越当真。"}, …]`
 - **时间轴必须由真实语速决定**：中文口播约 4.5 字/秒，但句读、数字、英文会把节奏拉长 —— 实测 6 句短片比"字数估算"多出约 0.8 秒。
-- 音色：`--speaker 曼波讲故事` / `台湾腔甜妹` / …（用当次指令点的音色；没点名就用默认）。
-- 拼轨会**先把每句摆到它的 `at`**（前面补静音），所以画面时间轴和配音天然对齐。
+- 逐句音频按「文本 + 后端」缓存（`line-XX.<ext>.cache.json`）：同批重跑不重复调用；改字或换后端自动重合成。
+- 拼轨会**先把每句摆到它的 `at`**（前面补静音），所以画面时间轴和配音天然对齐；段落重叠默认拒绝（明确要叠声才传 `--allow-overlap`），不裁句尾凑预算。
 
 ## 6. 出片
 

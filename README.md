@@ -95,7 +95,7 @@
 flowchart LR
   A[口播文案] --> B[拆成语义拍<br/>每拍一个动作]
   B --> C[人物与场景分别设计<br/>先定大人物脸再定小人物]
-  C --> D[逐句配音<br/>量真实时长 → 排字幕与动作]
+  C --> D[逐句配音 · 后端自带<br/>量真实时长 → 排字幕与动作]
   D --> E[纯时间函数绘制<br/>先静帧查比例与遮挡]
   E --> F[逐帧导出<br/>t 定点截图 → ffmpeg]
   F --> G[MP4 + 可改工程<br/>+ 关键静帧 + 真实规格]
@@ -115,7 +115,7 @@ flowchart LR
 - `components.mjs` —— 上面那八个组件
 - `index.html` —— 播放器 + `window.__player.set(ms)/total`（导出器认这个钩子）
 - `serve.py` —— 本机 HTTP 服务，支持音频 byte-range
-- `assets/fonts/` —— Fusion Pixel 12px（OFL-1.1，含许可证）；`assets/voice.wav` —— 20 秒示范配音，**新主题必须替换**
+- `assets/fonts/` —— Fusion Pixel 12px（OFL-1.1，含许可证）；`assets/voice.wav` —— 20 秒示范配音，**新主题必须替换**（用自己的后端生成，或直接换成品音轨，见「配音与时间轴」）
 
 ## 🚀 快速开始
 
@@ -130,7 +130,8 @@ cd <本次项目目录>
 # 2) 起本机预览
 python3 serve.py --port 8778 --open
 
-# 3) 逐句配音 + 量真实时长（两步走）
+# 3) 逐句配音 + 量真实时长（两步走；配音后端要你自己给，先 --check 验证）
+python3 <技能目录>/scripts/voice_track.py --check
 python3 <技能目录>/scripts/voice_track.py --lines lines.json     --work work --tts-only
 python3 <技能目录>/scripts/voice_track.py --lines lines-abs.json --work work --out voice.wav
 
@@ -141,6 +142,8 @@ node <技能目录>/scripts/stills.mjs --url http://127.0.0.1:8778/ --out stills
 node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --out sample.mp4 \
      --audio voice.wav --fps 30 --dsf 1.5 --size 1920x1080 --threads 2
 ```
+
+> 🔊 配音后端由**你自己**提供（HTTP API 或本地 TTS 命令）；本技能不带内置音色，`--check` 先试听一句，接法与配置见 [references/pipeline.md](references/pipeline.md) 第 5 节。
 
 `--dsf 1.5` 是用意的：**1280×720 视口 ×1.5 直接得到 1920×1080 截图**，避免先截 2560 再 Lanczos 下采样把像素边缘柔掉。要别的尺寸就自己核对输出。
 
@@ -166,7 +169,8 @@ node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --ou
 - 中文口播约 **4.5 字/秒**，但句读、数字、英文都会拉长 —— 所以**先 TTS 量真实时长，再排字幕与动作**，不靠极端变速迁就拍脑袋的时间轴。
 - `voice_track.py` 默认**拒绝段落重叠**（要叠声才传 `--allow-overlap`）；**不裁句尾凑预算**；拼轨时把每句摆到它的 `at`（前面补静音），所以画面时间轴与配音天然对齐。
 - 出片端按画面长度**补静音**，不用 `-shortest`（音频短一点会把画面尾巴吃掉）。
-- 音色用剪映内置音色（`jianying-tts` 技能），换音色只改 `--speaker`。
+- **配音后端由你自己提供**（本技能不带任何内置音色）：HTTP API 或本地 TTS 命令两种接法、请求/响应约定与配置优先级见 [references/pipeline.md](references/pipeline.md) 第 5 节；`--check` 一句话验证接好没有。
+- 已经有成品音轨（真人录音、别的工具合成）就跳过合成，把 `render_episode.mjs --audio` 指过去；但字幕与动作仍要按它的真实时长排。
 
 ## ✅ 验收清单
 
@@ -190,7 +194,7 @@ RuiC-pixel-explainer/
 │  ├─ reference-modes.md        原创参考 vs 素材恢复两条口径
 │  └─ pipeline.md               工程接法（含 React 工程那条路由）
 ├─ scripts/
-│  ├─ voice_track.py            逐句 TTS（剪映音色）→ 量时长 → 按时间轴拼一条音轨
+│  ├─ voice_track.py            逐句 TTS（后端自带：HTTP API / 本地命令，带缓存）→ 量时长 → 按时间轴拼一条音轨
 │  ├─ render_episode.mjs        逐帧导出（自带同帧重截一致性检查）
 │  └─ stills.mjs                静帧质检（渲片前必跑）
 ├─ assets/
@@ -223,13 +227,16 @@ python3 ~/.agents/registry/gen_registry.py                           # 刷新能
 **为什么不用 `<video>` 内联播放？**
 GitHub 的 markdown 清洗器会把 `<video>` 整段剥掉（任何 host），`<iframe>` 会被转义。README 里能出声播放的形态只有 GitHub 的 `user-attachments` 附件链接（本仓库演示段就是这么放的）。
 
+**配音为什么不带 TTS？**
+各家 TTS 的音色、语言与合规要求都不同，所以仓库只保留"逐句合成 → 量时长 → 拼轨"的骨架：接你自己的 HTTP 接口或本地命令（见 [references/pipeline.md](references/pipeline.md) 第 5 节）。样板里的示例配音只是占位音轨，换成你自己的即可。
+
 **字体授权？**
 样板用 Fusion Pixel 12px（OFL-1.1），许可证随字体一起放在 `assets/cinematic-template/assets/fonts/`。
 
 ## 声明
 
 - 本产线交付的是**原创绘制**：人物、场景、道具、字幕全部由代码画出；参考片只用于风格与规格定标。
-- 示范成片的口播用剪映内置音色合成，未使用任何真人录音。
+- 示范成片使用样板自带的预置示例配音（`assets/cinematic-template/assets/voice.wav`），未使用任何真人录音；本技能不带内置 TTS，配音后端由使用者自己接入。
 
 ## 赞赏支持
 

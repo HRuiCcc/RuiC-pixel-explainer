@@ -9,6 +9,7 @@ metadata:
       - node
       - ffmpeg
       - python3
+      - curl
 ---
 
 # ruic-pixel-explainer · 粗像素电影式讲解片
@@ -62,7 +63,7 @@ metadata:
 1. 确认主题、时长和参考风格。明确数字或专有事实才查出处；纯教学比喻不为凑事实表虚构引用。用户让你选文案就直接写。
 2. 把文案分成**语义拍**，给每拍一个动作：物品出现、表情变化、走路、拿取、验证或开门。同场景可以有多句口播，不必每句话切镜头。
 3. 人物与场景分别设计。新人物应改变剪影或特征组合，而不只是给老精灵换颜色。先定大人物脸，再定同一人的小人物。
-4. 逐句合成口播，量真实时长，再填字幕、说话区间与动作时间。先测语速；不要靠极端变速迁就拍脑袋的时间轴。
+4. 逐句合成口播，量真实时长，再填字幕、说话区间与动作时间。口播走**使用者自己的**配音后端（HTTP API 或本地 TTS 命令；本技能不带内置音色，接法见 [references/pipeline.md](references/pipeline.md) 第 5 节）——先 `voice_track.py --check` 验证接好、试听音色，再测语速；不要靠极端变速迁就拍脑袋的时间轴。使用者已有成品音轨就不必合成，`render_episode.mjs --audio` 直接指过去，但时间码仍按真实时长排。
 5. 用时间的纯函数绘制，先取少量关键静帧检查比例与遮挡，再逐帧出片。同帧重截不一致必须修正；CSS 墙钟动画和 `Math.random()` 不进入录制画面。
 
 用户已经授权具体样片或给了明确结构时，直接把样片做完给他审。复杂长片、内容有实质歧义时才澄清，不把分镜确认或静帧确认当作所有任务的固定停工门。
@@ -75,6 +76,9 @@ cp -R <技能目录>/assets/cinematic-template <本次项目目录>
 python3 <本次项目目录>/serve.py --port 8778 --open
 
 # 口播两步走；work 换到本期独立工作目录。
+# 配音后端由使用者自己提供（HTTP API / 本地命令 / tts.config.json，见 references/pipeline.md 第 5 节），
+# 没配置时脚本会报错并给出接法。先 --check 合成一句试听。
+python3 <技能目录>/scripts/voice_track.py --check
 python3 <技能目录>/scripts/voice_track.py --lines lines.json --work <work> --tts-only
 python3 <技能目录>/scripts/voice_track.py --lines lines-abs.json --work <work> --out voice.wav
 
