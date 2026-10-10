@@ -52,11 +52,18 @@
 
 | 档 | 尺度（1080p 里） | 用途 |
 |---|---|---|
-| **大人物** | 主体约 400–620 px 高，脸 280–400 px，色块 12–20 px | 情绪与开场 |
-| **小人物** | 主体约 130–220 px 高，色块 4–8 px | 在世界里演步骤 |
+| **半身人物** | 主体约 400–620 px 高，脸 280–400 px，色块 12–20 px | 情绪与开场 |
+| **Q 版小人** | 主体约 130–220 px 高，色块 4–8 px | 在世界里演步骤 |
 
-大人物是**独立肖像设计**（主格约 32×35，头占约 23 行；大块头发、方眼白＋瞳孔、眉毛与嘴）；小人物是**同一个人的行动版**（约 22×31 的侧身，站立 + 两帧走路）。
-⚠️ 旧线索里那套 14×21 小精灵只能当小人物，**别直接放大当大人物特写** —— 放大后没有眼睛、眉毛和嘴的层次。
+半身人物是**独立的腰线以上设计**（从完整帽子或头盔到腰线：肩、胸、袖子、手臂与方手，腿脚不入镜）；Q 版小人是**同一个人的大头行动版**（约 24×31，大头短身、厚的阶梯轮廓，站立 / 走路 / 庆祝）。
+**脸上不额外画鼻子** —— 无突出侧鼻、鼻梁、中央鼻影或鼻尖高光，用眼睛、小嘴和少量腮红表达表情。
+
+人物资源按宿主能力分两条路线（详见 [references/imagegen-route.md](references/imagegen-route.md) 与 [references/code-route.md](references/code-route.md)）：
+
+- **A · 生图角色**：参考图 → 每角色一张 **4×4 透明动作表（16 格）**＋一张 **半身表情表** → `register_actor_sheet.py` 按 alpha 间隔注册 → `SpriteActor` 在 Canvas 里绘制；
+- **B · 代码角色**：不依赖任何生图能力，用升级后的 `frontActor` / `sideActor` 直接绘制，可通过 `hairStyle` / `headwear` / 眼色 / 眼罩等字段配置。
+
+⚠️ 旧线索里那套 14×21 小精灵不符合当前规范，**不能只换色或放大继续用**。
 
 ### 2. 八个可复用讲解组件（`assets/cinematic-template/components.mjs`）
 
@@ -109,19 +116,22 @@
 ```mermaid
 flowchart LR
   A[口播文案] --> B[拆成语义拍<br/>每拍一个动作]
-  B --> C[人物与场景分别设计<br/>先定大人物脸再定小人物]
+  B --> C[人物与场景分别设计<br/>先锁身份特征，再做半身与小人]
   C --> D[逐句配音 · 后端自带<br/>量真实时长 → 排字幕与动作]
   D --> E[纯时间函数绘制<br/>先静帧查比例与遮挡]
   E --> F[逐帧导出<br/>t 定点截图 → ffmpeg]
   F --> G[MP4 + 可改工程<br/>+ 关键静帧 + 真实规格]
 ```
 
-## 🛣 两条工程路由
+## 🛣 工程路由（按宿主生图能力选）
 
 | 路由 | 适合 | 说明 |
 |---|---|---|
-| **① `assets/cinematic-template/`**（技能自带） | 大人物开场＋小人物演示、要求接近参考片质感 | 原生 1920×1080 Canvas 粗像素样板；人物 / 后景 / 道具 / 前景 / 灯光 / HUD / 字幕各自独立绘制；**自包含**（含 pixel 字体与 20 秒示范配音），复制走再改 |
-| **② 已有的 React 工程** | 完整地图、选择题、评分、通关流程 | 沿用它的 `SceneDef` / `Pack` 接口；仅对新一期选它，保留已验收的旧期。接法见 [references/pipeline.md](references/pipeline.md) |
+| **A · 生图角色**（`assets/imagegen-template/`） | 宿主能调用图片生成（img2 / 内置 imagegen / 使用者已授权的生图后端） | 参考图 → 4×4 透明动作表 ＋ 半身表情表 → `scripts/register_actor_sheet.py` 注册（按 alpha 间隔切图、统一缩放与脚底/腰线锚点）→ `sprite-actor.mjs` 适配器在场景里绘制。模板是**静音资产检查页与适配器**，不带角色 PNG，缺图会报错。接法见其 `INTEGRATION.md` |
+| **B · 代码角色**（`assets/cinematic-template/`） | 没有生图能力，或用户选择纯代码 | 原生 1920×1080 Canvas 粗像素样板；升级后的 `frontActor`（半身）/ `sideActor`（Q 版小人）直接绘制，人物 / 后景 / 道具 / 前景 / 灯光 / HUD / 字幕各自独立；**自包含**（含 pixel 字体与 20 秒示范配音），复制走再改 |
+| **③ 已有的 React 工程** | 完整地图、选择题、评分、通关流程 | 沿用它的 `SceneDef` / `Pack` 接口；仅对新一期选它，保留已验收的旧期。接法见 [references/pipeline.md](references/pipeline.md) |
+
+无论哪条路，都复用同一套字幕、讲解组件与导出器；四条视觉锚点在 `assets/reference-frames/`（只用于定标，不当作所有主题的默认角色与场景）。
 
 **自带样板里有什么**（`assets/cinematic-template/`）：
 
@@ -134,13 +144,15 @@ flowchart LR
 
 ## 🚀 快速开始
 
+先按 [SKILL.md](SKILL.md) 确认宿主有没有可用的生图能力，再选路线：**有生图走 A**（见 [references/imagegen-route.md](references/imagegen-route.md)），**没有就走 B**（下面这套）。
+
 ```bash
-# 0) 复制模板到本次项目（别直接改模板）
+# 0) B 路线：复制纯代码模板到本次项目（别直接改模板）
 cp -R assets/cinematic-template <本次项目目录>
 cd <本次项目目录>
 
-# 1) 改 episode.json：主题、角色配色、说话区间、字幕（以及可选的 visualBeats）
-#    ⚠️ 改配色 ≠ 设计新角色；新人物/新场景要动 scene.mjs 的 frontActor / sideActor / buildBackgrounds 与动作代码
+# 1) 改 episode.json：主题、角色配色与可选字段（hairStyle / headwear / eye / eyePatch）、说话区间、字幕（以及可选的 visualBeats）
+#    ⚠️ 改配色 ≠ 设计新角色；模板字段不足以表现新轮廓时，扩展 scene.mjs 的 frontActor / sideActor 与新场景代码
 
 # 2) 起本机预览
 python3 serve.py --port 8778 --open
@@ -158,6 +170,13 @@ node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --ou
      --audio voice.wav --fps 30 --dsf 1.5 --size 1920x1080 --threads 2
 ```
 
+**A 路线**先注册生成的角色资产，再把 `sprite-actor.mjs` 接到模板上（完整接法见 `assets/imagegen-template/INTEGRATION.md`）：
+
+```bash
+python3 <技能目录>/scripts/register_actor_sheet.py --sheet mini.png     --grid 4x4 --canvas 256 --baseline 240 --out assets/sprites
+python3 <技能目录>/scripts/register_actor_sheet.py --sheet half-body.png --grid 2x2 --canvas 512 --baseline 500 --out assets/bust
+```
+
 > 🔊 配音后端由**你自己**提供（HTTP API 或本地 TTS 命令）；本技能不带内置音色，`--check` 先试听一句，接法与配置见 [references/pipeline.md](references/pipeline.md) 第 5 节。
 
 `--dsf 1.5` 是用意的：**1280×720 视口 ×1.5 直接得到 1920×1080 截图**，避免先截 2560 再 Lanczos 下采样把像素边缘柔掉。要别的尺寸就自己核对输出。
@@ -166,18 +185,18 @@ node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --ou
 
 | 层 | 1080p 里的建议尺度 | 用途 |
 |---|---|---|
-| 大人物 | 主体 400–620 px 高，脸 280–400 px，色块 12–20 px | 情绪与开场 |
-| 小人物 | 主体 130–220 px 高，色块 4–8 px | 在世界里演步骤 |
+| 半身人物 | 主体 400–620 px 高，脸 280–400 px，色块 12–20 px | 情绪与开场 |
+| Q 版小人 | 主体 130–220 px 高，色块 4–8 px | 在世界里演步骤 |
 | 环境 | 建筑 60–180 px 的大体块；细线 2–8 px | 深度、位置、质感 |
 | 字幕 / HUD | 原生 1920×1080 单独绘制 | 与镜头解耦 |
 | 柔光 / 暗角 | 原生画布、低对比渐变 | 确立光源，但不柔化脸 |
 
-- **脸**：约 18–28 格宽、20–24 格高；头发 2–3 个块面；肤色 3 层就够；**不要**细发丝、渐变脸、虹膜反光。
+- **脸**：约 18–28 格宽、20–24 格高；头发 2–3 个块面；肤色 3 层就够；**不要**细发丝、渐变脸、虹膜反光；**不画鼻子**（无侧鼻、鼻梁、中央鼻影、鼻尖高光），表情靠眼睛、小嘴与少量腮红。
 - **手**：可与身体略分离，方块手势，有肩膀和衣领。
-- **场景密度**：两三个识别物就能定地点（修理铺＝桌椅＋灯＋钟；记忆关卡＝书＋路＋锁门）；大部分处在暗部，纹理只用来辨认材质。
+- **场景密度**：两三个识别物就能定地点（修理铺＝桌椅＋灯＋钟；记忆关卡＝书＋路＋锁门），且**场景要对应角色**（按角色气质与本期动作设计空间，不套同一个房间或只换背景色）；大部分处在暗部，纹理只用来辨认材质。
 - **光与色**：暖主光约 `#d8c58c`；外围近黑棕或灰绿；皮肤 `#edc49c` / `#ddb18c` / `#bf926c`；轮廓 `#19221e`；金边与关键词 `#cfab57` / `#d9a13e`；青绿只给反馈或路径。每场一个主光源，前景桌边挡腿、道具不挡脸、字幕占最后层。
 - **字幕**：本地 Fusion Pixel，通常 60–72 px，纸白外描边＋暗内描边＋**一个金色关键词**；单行居中、底部暗区；超宽按语义拆拍，不强行缩小。
-- **HUD**：大人物开场可以先不给章节轨；进小人物关卡后再出现导航、署名、计数或反馈 —— 不是每镜都塞满导航＋地点卡＋进度＋状态卡。
+- **HUD**：半身开场可以先不给章节轨；进小人物关卡后再出现导航、署名、计数或反馈 —— 不是每镜都塞满导航＋地点卡＋进度＋状态卡。
 
 ## 🔊 配音与时间轴
 
@@ -190,7 +209,7 @@ node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --ou
 ## ✅ 验收清单
 
 - [ ] **同一帧重截两次字节一致**（`render_episode.mjs` 自带抽帧自检）；确定性问题先修再渲。
-- [ ] 关键静帧逐张看：大脸表情结构、大小人物比例、前景遮挡、字幕字形与安全区。
+- [ ] 关键静帧逐张看：半身脸的表情结构、半身与小人比例、前景遮挡、字幕字形与安全区。
 - [ ] `ffprobe` 核对：时长、帧数、帧率、音轨。
 - [ ] 文字：单行、不压字幕带、不盖脸；数字有出处、示意读数不伪装成真实统计。
 - [ ] 交付：MP4 + 可改工程 + 关键静帧 + 口播文本 + 真实规格；**渲完直接给用户审**，不派代理重复整片审片。
@@ -203,17 +222,22 @@ node <技能目录>/scripts/render_episode.mjs --url http://127.0.0.1:8778/ --ou
 RuiC-pixel-explainer/
 ├─ SKILL.md                     技能主文件（放进 ~/.agents/skills/ 就能被 Agent 调用）
 ├─ references/
+│  ├─ imagegen-route.md         A 路线：生图角色的两套资源（4×4 动作表＋半身表情表）与提示词约束
+│  ├─ code-route.md             B 路线：升级后的代码角色函数与可配置字段
 │  ├─ style-dna.md              视觉定标：三档分辨率 / 人物 / 场景密度 / 光色 / 字幕字体
-│  ├─ cinematic-profile.md      自带样板的配方（人物参数、镜头切点、说话区间、验证重点）
+│  ├─ cinematic-profile.md      B 样板配方（人物参数、镜头切点、说话区间、验证重点）
 │  ├─ teaching-components.md    讲解组件与语义事件（怎么做"有东西在演"）
 │  ├─ reference-modes.md        原创参考 vs 素材恢复两条口径
-│  └─ pipeline.md               工程接法（含 React 工程那条路由）
+│  └─ pipeline.md               工程接法（旧 React 工程 + 配音后端 + 导出器）
 ├─ scripts/
 │  ├─ voice_track.py            逐句 TTS（后端自带：HTTP API / 本地命令，带缓存）→ 量时长 → 按时间轴拼一条音轨
+│  ├─ register_actor_sheet.py   角色图集注册：按 alpha 间隔切分、统一缩放、脚底/腰线锚点
 │  ├─ render_episode.mjs        逐帧导出（自带同帧重截一致性检查）
 │  └─ stills.mjs                静帧质检（渲片前必跑）
 ├─ assets/
-│  ├─ cinematic-template/       自包含粗像素样板（原生 1920×1080 + 字体 + 20s 示范配音）
+│  ├─ imagegen-template/        A 路线的静音资产检查页与 SpriteActor 适配器（不含角色 PNG）
+│  ├─ reference-frames/         最新样片的四张视觉锚点（定标用）
+│  ├─ cinematic-template/       B 路线的自包含粗像素样板（原生 1920×1080 + 字体 + 20s 示范配音）
 │  └─ wechat-donate.png
 └─ demo-20s.mov                 示范成片（20 秒 / 1920×1080 / 30fps / 带配音）
 ```
@@ -226,7 +250,7 @@ python3 ~/.agents/registry/deploy_skills.py --sync                   # 软链给
 python3 ~/.agents/registry/gen_registry.py                           # 刷新能力注册表
 ```
 
-依赖：`node`（导出器用 playwright 驱动浏览器）、`ffmpeg`、`python3`（配音与拼轨）。
+依赖：`node`（导出器用 playwright 驱动浏览器）、`ffmpeg`、`python3`（配音、拼轨与 `register_actor_sheet.py`，后者另需 Pillow + numpy）。
 
 ## ❓ 常见问题
 

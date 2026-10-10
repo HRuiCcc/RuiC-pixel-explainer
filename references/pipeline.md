@@ -1,6 +1,6 @@
 # 旧 React 游戏接口与流水线
 
-新参考质感优先使用 cinematic-profile.md；母提示词 v1.0 仅作旧接口背景，视觉规范与是否确认以当前 SKILL.md 为准。
+先按 [SKILL.md](../SKILL.md) 检查实际生图能力：A 见 [imagegen-route.md](imagegen-route.md)，B 见 [code-route.md](code-route.md) 与 [cinematic-profile.md](cinematic-profile.md)。本文件第 1–4 节是旧 React 游戏接口，第 5–6 节的自带配音后端与导出器供两路复用。母提示词 v1.0 仅作旧接口背景，视觉规范与是否确认以当前 SKILL.md 为准。
 
 > 引擎与母提示词都在 `~/Desktop/zcode/ai-explain-game/`；本文件是"怎么从一段口播文案走到一条 MP4"的施工细节。
 > 视觉规格见 [style-dna.md](style-dna.md)。已跑通的实例：**第 3 期 15 秒样片**（3 场 / 15.0s / 1080p30，主角＝新设计的"夜班档案员"）。
@@ -60,7 +60,7 @@ export const m01: SceneDef = {
 ```
 
 - **机位**（`scenes/kit.ts`）：`push(x, y, z0, z1, ms)` 推近、`hold(x,y,z)` 定住、需要多段用 `camAt(t, [{at, x, y, z}, …])`。坐标是 **320×180 艺术坐标**（x∈0–320，y∈0–180）。**动完必须停稳**。
-- **主角**：`pixel/character.ts` 的 `SKINS` 三套皮（`classic` / `archivist` 夜班档案员 / `host` 深夜电台）＋ 配饰 `acc: 'glasses' | 'headset' | 'cap'`。要新角色就加一套皮（12 个色键）+ 挑一个配饰，只适合简便换皮；用户要新人物时还需改变轮廓或特征结构。
+- **主角**：`pixel/character.ts` 的 `SKINS` 三套皮与配饰只用于旧期兼容。新一期的 B 角色接入升级后的 frontActor / sideActor；A 接入 SpriteActor。旧 14×21 全身精灵不符合最新半身、大头短身与无凸鼻规范，不能只换色或放大继续用。新人物须改变轮廓或特征结构。
 - **元素层**：`ui/elements.tsx` 里 B1–B21（打字机 / 大数字 / 算式黑板 / 金边面板 / 填空 / 选项 / 星级 / A-B 双卡 / 道具卡 / 节点图 / 聊天气泡 / 警示面板 / 进度条 / 折线图 / 清单 / 徽章 / 节点牌 / 参数旋钮 / 工具调用 / 关卡牌）。
   坐标是**屏幕像素**（1280×720 设计稿），DOM 顺序＝叠放顺序（要底衬就先写底衬）。
   出场进度一律用 `p(t, 起, 时长)`，别自己算缓动。
@@ -180,8 +180,8 @@ node scripts/render_episode.mjs --url http://127.0.0.1:5274/ --ep <slug> \
 | 成片 | `ffprobe` | 1920×1080 / 30fps / 时长对得上 / 有 AAC 音轨 |
 | 交互（有交互点才做） | 点一遍 + 静置 3 秒自动继续 | 纯观看不卡住 |
 
-**交付**：成片 MP4 给绝对路径（默认落 `~/Desktop/zcode/`，只有他明说才放桌面）+ 每场景静帧 + 口播稿 + 一句话规格。
-**渲完直接进对话框由他审**，不要先自审。
+**交付**：成片 MP4 给绝对路径（落用户指定目录；宿主要求 outputs/ 时遵守宿主）+ 可修改工程 + 关键静帧 + 口播稿 + 一句话规格。
+**完成必要技术检查后直接进对话框由他审**，不额外安排代理重复整片审片。
 
 ## 8. 坑（真踩过的）
 

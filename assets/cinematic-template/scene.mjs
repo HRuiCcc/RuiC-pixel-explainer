@@ -30,46 +30,96 @@ function spotlight(c,x,y,bottom,width,strength=.15){
 }
 function vignette(c){const g=c.createRadialGradient(960,440,270,960,485,1100);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.7,'rgba(0,0,0,.30)');g.addColorStop(1,'rgba(0,0,0,.75)');c.fillStyle=g;c.fillRect(0,0,W,H);const lower=c.createLinearGradient(0,855,0,H);lower.addColorStop(0,'rgba(0,0,0,0)');lower.addColorStop(1,'rgba(0,0,0,.86)');c.fillStyle=lower;c.fillRect(0,855,W,H-855);}
 
+// Both actors share identity colors, but have independently authored shapes.
+// Optional visual fields: hairStyle (bob/long/short), headwear (none/cap/beret),
+// headwearColor, headwearLight, headwearAccent, eye/eyeLeft/eyeRight, eyePatch.
+// Existing episode.actor color tables remain valid; no image asset is required.
+function actorPalette(skin={}){
+ return {outline:'#171d1e',hair:'#282c29',hairLight:'#41433a',coat:'#334637',coatLight:'#50634c',scarf:'#a55437',skin:'#ddb18c',skinLight:'#edc49c',skinShade:'#bf926c',clip:'#c79c4a',eye:'#425e6d',eyeWhite:'#f1e6cc',blush:'#cd927d',mouth:'#493b37',collar:'#e4e0c4',pants:'#373b35',hairStyle:'bob',headwear:'none',...skin};
+}
+function headwear(r,p,f,mini=false){
+ const hat=f.headwearColor||f.hair,light=f.headwearLight||f.hairLight,accent=f.headwearAccent;
+ if(f.headwear==='cap'){
+  if(mini){p([[6,0],[18,0],[18,1],[21,1],[21,4],[22,4],[22,7],[2,7],[2,4],[3,4],[3,2],[6,2]],f.outline);r(5,2,14,4,hat);r(5,2,14,1,light);r(3,6,19,2,f.outline);if(accent)r(6,3,2,2,accent);}
+  else{p([[8,0],[24,0],[24,1],[27,1],[27,3],[29,3],[29,7],[3,7],[3,3],[5,3],[5,1],[8,1]],f.outline);r(6,2,20,4,hat);r(6,2,20,1,light);r(4,6,25,2,f.outline);if(accent)r(8,3,3,2,accent);}
+ }else if(f.headwear==='beret'){
+  if(mini){p([[8,0],[18,0],[18,1],[21,1],[21,3],[22,3],[22,6],[3,6],[3,3],[5,3],[5,1],[8,1]],f.outline);r(6,2,14,3,hat);r(7,2,10,1,light);if(accent)r(18,3,2,2,accent);}
+  else{p([[10,0],[24,0],[24,1],[27,1],[27,3],[29,3],[29,6],[4,6],[4,3],[7,3],[7,1],[10,1]],f.outline);r(8,2,18,3,hat);r(9,2,13,1,light);if(accent)r(24,3,2,2,accent);}
+ }
+}
+
 export function frontActor(c,x,y,s,t,skin,speaking=false){
- c.save();c.translate(Math.round(x),Math.round(y));
+ const f=actorPalette(skin),outline=f.outline;
+ c.save();c.translate(Math.round(x),Math.round(y));c.imageSmoothingEnabled=false;
  const r=(xx,yy,ww,hh,col)=>rect(c,xx*s,yy*s,ww*s,hh*s,col),p=(pts,col)=>poly(c,pts.map(([a,b])=>[a*s,b*s]),col);
- const outline='#1b2421',f=skin;
- // A 32×35 independent portrait sprite. Head occupies 23 rows, not a 14×21
- // walking sprite enlarged beyond the available facial detail.
- r(9,24,15,8,outline);r(10,24,13,7,f.coat);r(11,25,3,5,f.coatLight);r(20,25,2,5,'#293e31');
- p([[12,23],[15,25],[16,27],[17,25],[21,23],[20,26],[17,28],[16,28],[13,26]],'#e4e0c4');r(14,23,6,2,f.scarf);r(16,25,2,4,f.scarf);r(15,28,3,2,'#773e2b');
- r(10,32,5,3,'#2f3126');r(18,32,5,3,'#2f3126');r(9,34,6,1,outline);r(18,34,7,1,outline);
- // Stepped bob haircut; the asymmetrical fringe is a changed silhouette.
- p([[10,0],[22,0],[22,1],[25,1],[25,3],[27,3],[27,7],[28,7],[28,20],[26,20],[26,22],[23,22],[23,24],[8,24],[8,22],[5,22],[5,19],[4,19],[4,7],[5,7],[5,4],[7,4],[7,2],[10,2]],outline);
- p([[10,1],[22,1],[22,2],[24,2],[24,4],[26,4],[26,8],[27,8],[27,19],[25,19],[25,21],[22,21],[22,23],[9,23],[9,21],[6,21],[6,18],[5,18],[5,8],[6,8],[6,5],[8,5],[8,3],[10,3]],f.hair);
- p([[11,5],[20,5],[20,7],[23,7],[23,12],[25,12],[25,16],[23,16],[23,20],[21,20],[21,22],[11,22],[11,20],[8,20],[8,12],[9,12],[9,8],[11,8]],f.skinShade);
- p([[12,6],[20,6],[20,8],[23,8],[23,18],[21,18],[21,21],[12,21],[12,20],[9,20],[9,12],[10,12],[10,9],[12,9]],f.skin);
- r(13,8,7,11,f.skinLight);r(20,10,3,8,f.skinLight);r(24,12,1,3,f.skin);
- r(8,3,14,3,f.hairLight);r(7,6,8,2,f.hairLight);r(6,8,8,2,f.hair);r(7,10,4,3,f.hair);r(6,12,3,6,f.hairLight);r(7,2,7,2,f.hair);
- // Simple two-tile brass clip; no tiny hair texture or glossy anime eyes.
- r(8,5,4,1,f.clip);r(9,6,4,1,'#957540');
+ // Independent 32×35 WAIST-UP design: complete head, broad shoulders, sleeves,
+ // hands and a continuous waist hem. No legs or enlarged walking-body geometry.
+ if(f.hairStyle==='long'){r(4,13,5,22,outline);r(5,14,3,20,f.hair);r(6,17,1,14,f.hairLight);r(25,13,4,22,outline);r(26,14,2,20,f.hair);}
+ p([[10,23],[23,23],[23,25],[27,25],[27,27],[29,27],[29,35],[4,35],[4,27],[6,27],[6,25],[10,25]],outline);
+ p([[10,24],[23,24],[23,26],[26,26],[26,28],[28,28],[28,34],[5,34],[5,28],[7,28],[7,26],[10,26]],f.coat);
+ r(8,27,4,7,f.coatLight);r(22,27,3,7,f.coatLight);r(12,25,9,9,f.coat);
+ p([[11,24],[15,26],[16,28],[17,26],[22,24],[21,28],[18,30],[15,30],[12,28]],f.collar);
+ r(14,24,6,2,f.scarf);r(16,26,2,7,f.scarf);r(7,34,20,1,outline);
+ p([[10,0],[22,0],[22,1],[25,1],[25,3],[27,3],[27,7],[29,7],[29,19],[27,19],[27,22],[24,22],[24,24],[8,24],[8,22],[5,22],[5,19],[3,19],[3,7],[5,7],[5,4],[7,4],[7,2],[10,2]],outline);
+ p([[10,1],[22,1],[22,2],[24,2],[24,4],[26,4],[26,8],[28,8],[28,18],[26,18],[26,21],[23,21],[23,23],[9,23],[9,21],[6,21],[6,18],[4,18],[4,8],[6,8],[6,5],[8,5],[8,3],[10,3]],f.hair);
+ // Flat cheek/chin outline; the center face remains a skin-color plane.
+ p([[11,7],[21,7],[21,9],[24,9],[24,19],[22,19],[22,21],[11,21],[11,20],[8,20],[8,11],[10,11],[10,9],[11,9]],f.skinShade);
+ p([[11,8],[21,8],[21,10],[23,10],[23,19],[21,19],[21,21],[12,21],[12,20],[9,20],[9,12],[10,12],[10,10],[11,10]],f.skin);
+ r(12,10,10,9,f.skinLight);r(11,17,12,2,f.skinLight);
+ r(8,3,15,3,f.hairLight);r(6,6,10,2,f.hair);r(7,8,6,2,f.hair);r(7,10,4,2,f.hair);r(21,7,4,3,f.hair);r(23,10,3,8,f.hair);
+ if(f.hairStyle==='short'){r(5,15,3,6,outline);r(6,15,2,5,f.hair);r(25,15,3,6,outline);r(25,15,2,5,f.hair);}
+ if(f.clip){r(7,6,3,1,f.clip);r(8,7,3,1,f.clip);}
+ headwear(r,p,f);
  const blink=Math.floor(t/100)%43>=40;
- r(11,10,4,1,'#51442c');r(19,10,4,1,'#51442c');
- if(blink){r(11,13,4,1,outline);r(19,13,4,1,outline)}else{r(11,12,4,3,'#f1e6c6');r(19,12,4,3,'#f1e6c6');r(13,12,1,2,outline);r(20,12,1,2,outline);}
- r(16,15,1,2,'#c58f66');r(10,17,1,1,'#c89174');r(22,17,1,1,'#c89174');
- const mouth=speaking&&Math.floor(t/125)%3!==0;
- r(15,19,4,mouth?2:1,'#6b3a27');if(mouth)r(16,20,2,1,'#b57153');
+ for(const [xx,eye,side]of [[11,f.eyeLeft||f.eye,'left'],[19,f.eyeRight||f.eye,'right']]){
+  r(xx,11,4,1,outline);
+  if(f.eyePatch===side)r(xx,12,4,4,outline);
+  else if(blink)r(xx,14,4,1,outline);
+  else{r(xx,12,4,4,f.eyeWhite);r(xx+1,13,2,3,eye);r(xx+1,12,2,1,outline);}
+ }
+ r(10,17,2,1,f.blush);r(22,17,2,1,f.blush);
+ const mouth=speaking&&Math.floor(t/125)%3!==0;r(15,19,3,mouth?2:1,f.mouth);
+ if(mouth)r(16,20,1,1,f.blush);
  const gesture=speaking&&t>2800&&t<6100?2:0;
- r(2,27-gesture,5,5,outline);r(3,28-gesture,3,3,f.skin);r(3,28-gesture,1,1,f.skinLight);
- r(26,27-gesture,5,5,outline);r(27,28-gesture,3,3,f.skin);r(27,28-gesture,1,1,f.skinLight);
+ r(3,28-gesture,5,6,outline);r(4,28-gesture,3,3,f.coatLight);r(4,31-gesture,3,2,f.skinLight);
+ r(25,28-gesture,5,6,outline);r(26,28-gesture,3,3,f.coatLight);r(26,31-gesture,3,2,f.skinLight);
  c.restore();
 }
 
 export function sideActor(c,x,foot,s,t,skin,walking=false){
- const f=skin,outline='#19221e',phase=Math.floor(t/170)%2;c.save();c.translate(Math.round(x),Math.round(foot-31*s-(walking&&phase?1*s:0)));
+ const f=actorPalette(skin),outline=f.outline;
+ // Keep boolean callers intact. New callers may request 'idle', 'walk' or
+ // 'celebrate'; motion stays on the same time axis and preserves foot anchoring.
+ const pose=typeof walking==='string'?walking:walking?'walk':'idle',walk=pose==='walk',celebrate=pose==='celebrate',phase=Math.floor(t/170)%2;
+ c.save();c.translate(Math.round(x),Math.round(foot-31*s-((walk||celebrate)&&phase?s:0)));c.imageSmoothingEnabled=false;
  const r=(xx,yy,ww,hh,col)=>rect(c,xx*s,yy*s,ww*s,hh*s,col),p=(pts,col)=>poly(c,pts.map(([a,b])=>[a*s,b*s]),col);
- p([[6,0],[14,0],[14,1],[17,1],[17,3],[19,3],[19,6],[20,6],[20,11],[22,11],[22,13],[20,13],[20,16],[18,16],[18,18],[15,18],[15,20],[6,20],[6,18],[3,18],[3,15],[2,15],[2,6],[3,6],[3,3],[5,3],[5,1],[6,1]],outline);
- r(4,4,14,13,f.hair);r(6,1,8,3,f.hairLight);r(4,5,5,10,f.hairLight);
- p([[12,5],[18,5],[18,7],[19,7],[19,11],[21,11],[21,12],[19,12],[19,15],[17,15],[17,17],[12,17],[12,16],[10,16],[10,9],[12,9]],f.skin);
- r(14,7,4,8,f.skinLight);r(15,9,4,1,'#54402d');r(16,11,3,3,'#eee1c5');r(18,11,1,2,outline);r(18,15,2,1,'#76422d');r(6,5,4,1,f.clip);
- r(6,18,11,9,outline);r(7,19,9,7,f.coat);r(8,19,3,6,f.coatLight);r(14,18,3,2,'#dddac0');r(12,18,3,2,f.scarf);r(10,19,2,3,f.scarf);
- const swing=walking?(phase?1:-1):0;r(6,23-swing,4,4,outline);r(7,24-swing,2,2,f.skin);r(16,22+swing,4,4,outline);r(17,23+swing,2,2,f.skin);
- if(walking&&phase){r(8,27,3,3,'#3d392b');r(7,30,5,1,outline);r(13,27,3,2,'#4a4230');r(15,29,4,2,outline)}else{r(8,27,3,3,'#3d392b');r(8,30,4,1,outline);r(13,27,3,3,'#4a4230');r(13,30,5,1,outline)}
+ // 24×31 front / slight-three-quarter action sprite, head about 65% of height.
+ // The named sideActor API now uses a readable flat face during travel.
+ if(f.hairStyle==='long'){r(2,11,4,17,outline);r(3,12,2,15,f.hair);r(18,11,4,17,outline);r(19,12,2,15,f.hair);}
+ r(6,18,13,9,outline);r(7,19,11,7,f.coat);r(8,20,3,6,f.coatLight);r(15,20,2,6,f.coatLight);
+ r(9,19,7,2,f.collar);r(11,19,3,2,f.scarf);r(12,21,2,4,f.scarf);
+ p([[7,0],[17,0],[17,1],[20,1],[20,3],[22,3],[22,6],[23,6],[23,15],[21,15],[21,18],[19,18],[19,20],[5,20],[5,18],[3,18],[3,15],[1,15],[1,6],[2,6],[2,3],[4,3],[4,1],[7,1]],outline);
+ p([[7,1],[17,1],[17,2],[19,2],[19,4],[21,4],[21,7],[22,7],[22,14],[20,14],[20,17],[18,17],[18,19],[6,19],[6,17],[4,17],[4,14],[2,14],[2,7],[3,7],[3,4],[5,4],[5,2],[7,2]],f.hair);
+ p([[8,6],[17,6],[17,8],[19,8],[19,16],[17,16],[17,18],[7,18],[7,16],[5,16],[5,9],[7,9],[7,7],[8,7]],f.skinShade);
+ r(7,8,11,9,f.skin);r(8,10,10,7,f.skinLight);r(8,17,9,1,f.skinLight);
+ r(6,3,12,3,f.hairLight);r(4,6,7,2,f.hair);r(5,8,4,2,f.hair);r(17,6,3,3,f.hair);r(19,8,2,7,f.hair);
+ if(f.hairStyle==='short'){r(3,14,3,4,outline);r(4,14,2,3,f.hair);r(19,14,3,4,outline);r(19,14,2,3,f.hair);}
+ if(f.clip){r(5,5,3,1,f.clip);r(6,6,2,1,f.clip);}
+ headwear(r,p,f,true);
+ const blink=!walk&&Math.floor(t/100)%43>=40;
+ for(const [xx,eye,side]of [[7,f.eyeLeft||f.eye,'left'],[14,f.eyeRight||f.eye,'right']]){
+  r(xx,10,3,1,outline);
+  if(f.eyePatch===side)r(xx,11,3,3,outline);
+  else if(blink)r(xx,13,3,1,outline);
+  else{r(xx,11,3,3,f.eyeWhite);r(xx+1,11,2,3,eye);r(xx+1,11,2,1,outline);}
+ }
+ r(6,15,2,1,f.blush);r(17,15,2,1,f.blush);r(11,17,2,1,f.mouth);
+ const swing=walk?(phase?1:-1):0,armY=celebrate?14:23;
+ r(4,armY-swing,4,4,outline);r(5,armY-swing+1,2,2,celebrate?f.skinLight:f.coatLight);
+ r(18,armY+swing,4,4,outline);r(19,armY+swing+1,2,2,celebrate?f.skinLight:f.coatLight);
+ if(!celebrate){r(5,armY-swing+3,2,1,f.skinLight);r(19,armY+swing+3,2,1,f.skinLight);}
+ if(walk&&phase){r(8,27,3,3,f.pants);r(7,30,5,1,outline);r(13,27,3,2,f.pants);r(15,29,4,2,outline);}
+ else{r(8,27,3,3,f.pants);r(8,30,4,1,outline);r(14,27,3,3,f.pants);r(14,30,5,1,outline);}
  c.restore();
 }
 
@@ -139,7 +189,7 @@ export class CinematicScene{
   const start=460,end=1392,travel=ease((t-3100)/4300),x=lerp(start,end,travel),foot=lerp(741,682,clamp((x-1290)/130));
   const walking=t>3100&&t<7400;
   books(c,373,747,4,.69);
-  sideActor(c,x,foot,6.1,t,this.ep.actor,walking);
+  sideActor(c,x,foot,6.1,t,this.ep.actor,t>8400?'celebrate':walking);
   // The key is authored as a prop; it leaves the archive and follows the hand.
   const pick=ease((t-3550)/550),kx=lerp(697,x+117,pick),ky=lerp(602,foot-94,pick);if(t>1300)key(c,kx,ky,.67);
   if(t<2800)question(c,x+70,foot-251,ease((t-200)/300));
@@ -183,7 +233,7 @@ export class CinematicScene{
   const start=470,end=1390,travel=ease((ms-e.walkAt)/3800),x=lerp(start,end,travel),foot=lerp(741,682,clamp((x-1290)/130));
   const walking=ms>e.walkAt&&ms<e.walkAt+3800;
   drawOpenBook(c,{x:365,y:640,w:178,h:95,closed:ease((ms-e.closeAt)/650),mark:ms>e.markAt});
-  sideActor(c,x,foot,6.1,t,this.ep.actor,walking);
+  sideActor(c,x,foot,6.1,t,this.ep.actor,ms>e.rewardAt?'celebrate':walking);
   if(ms>e.testAt){
    const correct=ms>e.correctAt,reveal=clamp((ms-e.checkAt)/350),typed=clamp((ms-e.testAt-580)/500);
    const answer=correct?(l.rightAnswer||''):(l.wrongAnswer||'').slice(0,Math.floor(typed*(l.wrongAnswer||'').length));

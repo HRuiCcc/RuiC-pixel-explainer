@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>半身与 4×4 小人 · 资产检查</title><style>
+*{box-sizing:border-box}body{margin:0;background:#070d10;color:#dce3dc;font:16px monospace;overflow:hidden}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.frame{width:1920px;height:1080px;position:relative;transform-origin:center;flex:none}
+canvas{display:block;width:1920px;height:1080px;image-rendering:pixelated}
+.loading{position:absolute;inset:0;display:grid;place-items:center;background:#0b1419;white-space:pre-wrap;text-align:center;padding:120px}
+.controls{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:#182a2a;padding:10px}
+input{width:min(60vw,600px)}button{cursor:pointer;background:#34494a;color:#dce3dc;border:1px solid #83958a;padding:6px 12px}.rec .controls{display:none}
+</style></head><body>
+<div class="viewport"><div class="frame"><canvas width="1920" height="1080" id="stage"></canvas><div class="loading">等待已注册的透明角色资产…</div></div></div>
+<div class="controls"><button id="play">▶</button><input id="seek" type="range" min="0" max="19999" value="0" step="1" aria-label="资产检查时间轴"><span id="time">0 s</span></div>
+<script type="module" src="preview.mjs"></script>
+</body></html>
