@@ -12,8 +12,6 @@
 
 <https://github.com/user-attachments/assets/b6a7d60c-4ca2-46e0-8f4f-d66c567e2e98>
 
-[<img src="assets/download-video.png" width="266" alt="下载视频 MOV">](https://github.com/HRuiCcc/RuiC-pixel-explainer/raw/main/demo-20s.mov)
-
 剪映「真人播客女」音色（`zh_female_mizai_saturn_bigtts`），逐句合成后 1.08 倍速；字幕与说话区间按各句实测时长排。
 
 > **大人物 0–10 秒**：收藏了一堆干货，真要用时，却想不起来。／ 存下来，不等于学会了。／ 你缺的，是一次提取。
@@ -199,7 +197,6 @@ RuiC-pixel-explainer/
 │  └─ stills.mjs                静帧质检（渲片前必跑）
 ├─ assets/
 │  ├─ cinematic-template/       自包含粗像素样板（原生 1920×1080 + 字体 + 20s 示范配音）
-│  ├─ download-video.png        演示段那个「下载视频」按钮图
 │  └─ wechat-donate.png
 └─ demo-20s.mov                 示范成片（20 秒 / 1920×1080 / 30fps / 带配音）
 ```
