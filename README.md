@@ -10,7 +10,7 @@
 
 ## 🎬 演示 ·《收藏不等于学会》20 秒
 
-<https://github.com/user-attachments/assets/b6a7d60c-4ca2-46e0-8f4f-d66c567e2e98>
+<https://github.com/user-attachments/assets/08cc27a6-41da-4d1d-8e05-986fdc6bb6c2>
 
 > **大人物 0–10 秒**：收藏了一堆干货，真要用时，却想不起来。／ 存下来，不等于学会了。／ 你缺的，是一次提取。
 > **小人物 10–20 秒**：合上笔记，先答一道题。／ 卡住做标记，马上对答案。／ 答出来，钥匙才真正属于你。
