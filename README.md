@@ -239,9 +239,6 @@ python3 ~/.agents/registry/gen_registry.py                           # 刷新能
 **为什么字幕要先预载中文字形？**
 只传拉丁字符的 `fonts.load()` 不会触发中文字形包，首帧可能临时用系统字（看起来"字幕变了"）。预载要传**完整中文文本**，并等 `document.fonts.ready`。
 
-**为什么不用 `<video>` 内联播放？**
-GitHub 的 markdown 清洗器会把 `<video>` 整段剥掉（任何 host），`<iframe>` 会被转义。README 里能出声播放的形态只有 GitHub 的 `user-attachments` 附件链接（本仓库演示段就是这么放的）。
-
 **配音为什么不带 TTS？**
 各家 TTS 的音色、语言与合规要求都不同，所以仓库只保留"逐句合成 → 量时长 → 拼轨"的骨架：接你自己的 HTTP 接口或本地命令（见 [references/pipeline.md](references/pipeline.md) 第 5 节）。样板里的示例配音只是占位音轨，换成你自己的即可。
 
