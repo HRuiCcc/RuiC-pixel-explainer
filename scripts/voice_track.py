@@ -27,6 +27,8 @@ lines.json（at = 该句在**整片**时间轴上的毫秒位置）：
 
 HTTP 约定：POST JSON（默认 {"text": …, "voice": …}，可用配置里的 body 改模板），
 返回音频字节，或 JSON 里的音频直链 / base64（字段名可用 audio_field 指定）。
+直链下载默认是一条裸 GET：不转发接口的 Authorization、自定义 headers 和自签证书放行，
+避免音频换域名（CDN）时把 API key 发给第三方；同源鉴权要显式打开 download_auth。
 命令行约定：模板含 {text} {out} {voice} 占位符就按模板跑；不含占位符时按
 `<cmd> <文本> --out <文件>` 追加。完整说明见 references/pipeline.md「配音与时间轴」。
 """
@@ -102,6 +104,44 @@ def resolve_backend(a, work):
         sys.exit(f'不认识的配音后端类型：{kind}（只认 command / http）')
     return {'type': kind, 'cmd': cmd, 'url': url, 'key': key, 'voice': voice,
             'config': cfg, 'source': str(src) if src else '命令行 / 环境变量'}
+
+
+LOOPBACK_HOSTS = {'localhost', '127.0.0.1', '::1'}
+
+
+def origin_of(url):
+    """拆出 (scheme, host, port)；不是带主机名的 http(s) 就返回 None。"""
+    try:
+        parts = urllib.parse.urlsplit(url)
+        port = parts.port
+    except ValueError:
+        return None
+    scheme, host = (parts.scheme or '').lower(), (parts.hostname or '').lower()
+    if scheme not in ('http', 'https') or not host:
+        return None
+    return scheme, host, port or (443 if scheme == 'https' else 80)
+
+
+def check_download_target(target, api_url, cfg):
+    """校验音频直链，返回 (URL, 是否与接口同源)。
+
+    同源要求 scheme/host/port 全同。跨域默认只认 https，且永远不带接口凭据；
+    确实需要跨域鉴权时在配置里显式给 download_headers / download_hosts。
+    """
+    origin = origin_of(target)
+    if origin is None:
+        raise RuntimeError('配音接口返回的音频地址不合法（只认带主机名的 http/https）：' + target[:200])
+    scheme, host, _ = origin
+    same = origin == origin_of(api_url)
+    if scheme != 'https' and not same and host not in LOOPBACK_HOSTS \
+            and not cfg.get('download_allow_http'):
+        raise RuntimeError('音频地址是 http 且与配音接口不同源，已拒绝：'
+                           '跨域下载默认只认 https（本机回环地址或配置 download_allow_http 可放行）：'
+                           + target[:200])
+    allowed = [str(h).lower() for h in (cfg.get('download_hosts') or [])]
+    if allowed and not same and host not in allowed:
+        raise RuntimeError(f'音频地址的主机 {host} 不在 download_hosts 白名单里：' + target[:200])
+    return target, same
 
 
 def curl(url, out, method='GET', headers=None, key='', data=None, proxy='', insecure=False, timeout=120):
@@ -181,9 +221,19 @@ def synth(backend, text, tmp):
                 raise RuntimeError('配音接口返回的既不是音频也不是合法 JSON：' + raw[:200].decode('utf-8', 'replace'))
             kind, value = extract_audio(doc, cfg.get('audio_field', ''))
             if kind == 'url':
-                target = value if value.startswith('http') else urllib.parse.urljoin(backend['url'], value)
-                raw = curl(target, tmp, headers={k: v for k, v in headers.items() if k.lower() != 'content-type'},
-                           key=backend['key'], proxy=proxy, insecure=insecure, timeout=timeout)
+                target, same = check_download_target(
+                    value if value.startswith('http') else urllib.parse.urljoin(backend['url'], value),
+                    backend['url'], cfg)
+                # 直链下载默认裸请求：换域名的音频（CDN / 对象存储）不该看到接口的密钥。
+                # 同源且显式 download_auth 时才复用接口 headers 与 key，跨域一律不转发。
+                dl_headers = dict(cfg.get('download_headers') or {})
+                dl_key = ''
+                if same and cfg.get('download_auth'):
+                    dl_headers = {k: v for k, v in headers.items() if k.lower() != 'content-type'}
+                    dl_headers.update(cfg.get('download_headers') or {})
+                    dl_key = backend['key']
+                raw = curl(target, tmp, headers=dl_headers, key=dl_key, proxy=proxy,
+                           insecure=(insecure and same), timeout=timeout)
             elif kind == 'base64':
                 tmp.write_bytes(value)
                 raw = value

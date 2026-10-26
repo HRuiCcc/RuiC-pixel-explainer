@@ -117,6 +117,17 @@ python3 scripts/voice_track.py --tts-api https://your-tts/api --tts-api-key sk-�
 
 （要挂代理加 `"proxy": "http://127.0.0.1:7890"`；接口用自签证书加 `"insecure": true`。）
 
+**直链下载的凭据边界**：接口返回 `audio_url` 时，脚本会再发一次 GET 去取音频。这次请求默认是裸 GET —— 不带接口的 `Authorization`、不带 `headers` 里的自定义项、也不继承 `insecure`，因为音频常托管在另一个域名（CDN / 对象存储），带过去就等于把 API key 交给第三方。
+
+| 配置项 | 默认 | 作用 |
+|---|---|---|
+| `download_auth` | `false` | 仅**同源**（scheme+host+port 全同）时才把接口的 `Authorization` 与自定义 headers 复用到下载请求 |
+| `download_headers` | `{}` | 下载请求专用的 headers；需要给 CDN 带鉴权就写这里，与接口 key 分开管理 |
+| `download_hosts` | `[]` | 跨域下载的主机白名单；配了就只允许这些主机 |
+| `download_allow_http` | `false` | 放行跨域 http 下载（默认跨域只认 https；本机回环地址本就放行） |
+
+直链本身带临时签名（`?Signature=…&Expires=…`）时不用再配任何鉴权，签名 URL 自己就够了。
+
 ### 5.2 接法 B：本地 TTS 命令
 
 ```bash
