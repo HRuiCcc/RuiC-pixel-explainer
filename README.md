@@ -9,7 +9,7 @@
 
 <a href="assets/hero-pixel-explainer.png"><img src="assets/hero-pixel-explainer.png" alt="RuiC Pixel Explainer · 粗像素讲解片" width="100%"></a>
 
-**20 秒样片 ·《收藏不等于学会》**
+**三条 20 秒样片 · 收藏 / 橙发 / 蓝发**
 
 ---
 
