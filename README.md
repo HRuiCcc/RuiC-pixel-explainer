@@ -7,6 +7,10 @@
 源流派：像《刻意练习》＝"神"的武器那一类**像素游戏风读书讲解片**。
 本仓库把这种风格做成**可复现的产线**：画面是**时间的纯函数**，逐帧导出、逐帧确定（同一帧重截两次字节必须一致），不靠录屏。
 
+<a href="assets/hero-pixel-explainer.png"><img src="assets/hero-pixel-explainer.png" alt="RuiC Pixel Explainer · 粗像素讲解片" width="100%"></a>
+
+**20 秒样片 ·《收藏不等于学会》**
+
 ---
 
 ## 🎬 演示 ·《收藏不等于学会》20 秒

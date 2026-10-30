@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;width:1920px;height:1080px;overflow:hidden;background:#08080b}
+  body{font-family:"PingFang SC","Hiragino Sans GB","Helvetica Neue",Arial,sans-serif;color:#f2f2f6}
+  .stage{position:relative;width:1920px;height:1080px;overflow:hidden;
+    background:
+      radial-gradient(1000px 700px at 76% 40%, rgba(104,86,255,.18), transparent 66%),
+      radial-gradient(800px 600px at 58% 86%, rgba(58,120,255,.09), transparent 70%),
+      #08080b}
+  .grid{position:absolute;inset:0;
+    background-image:linear-gradient(to right,rgba(255,255,255,.035) 1px,transparent 1px),
+                     linear-gradient(to bottom,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:84px 84px;
+    -webkit-mask-image:radial-gradient(ellipse at 48% 46%,#000 30%,transparent 84%)}
+  .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 44% 44%,transparent 42%,rgba(0,0,0,.62) 100%)}
+  .topline{position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,.10)}
+  .topline:before{content:"";position:absolute;left:0;top:0;width:190px;height:2px;background:#ff5a36}
+  .frame{position:absolute;inset:38px;border:1px solid rgba(255,255,255,.055)}
+  .frame:before,.frame:after{content:"";position:absolute;width:78px;height:78px;border-color:rgba(255,255,255,.20)}
+  .frame:before{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+  .frame:after{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+
+  .left{position:absolute;left:112px;top:106px;width:880px}
+  .brand{display:flex;align-items:center;gap:15px;font-size:22px;letter-spacing:5px;color:#aab1c5;font-weight:500}
+  .dot{width:9px;height:9px;background:#8b7dff;transform:rotate(45deg);box-shadow:0 0 20px #6f5dff}
+  h1{margin:36px 0 0;font-size:156px;line-height:1.03;font-weight:900;letter-spacing:-4px}
+  h1 span{display:block}
+  .l1{color:#f5f5f9}
+  .l2{background:linear-gradient(100deg,#cdc0ff 0%,#9a86ff 46%,#6d8dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .en{margin-top:24px;font-size:23px;letter-spacing:9px;color:#8d95ab;font-weight:500}
+  .desc{margin:50px 0 0;font-size:29px;color:#b8bfce;letter-spacing:.5px}
+  .stats{margin-top:32px;display:flex;align-items:baseline;gap:12px}
+  .num{color:#7f9cff;font-weight:800;font-size:40px;letter-spacing:-.5px}
+  .lab{color:#c8cedb;font-size:25px}
+  .sep{color:#3b4050;font-size:30px;margin:0 7px}
+  .pills{margin-top:36px;display:flex;gap:14px}
+  .pill{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:12px 25px;font-size:23px;color:#d7dbe6}
+  .pill.on{background:#f3f3f7;color:#0b0b0e;border-color:#f3f3f7;font-weight:600}
+
+  .cards{position:absolute;right:40px;top:92px;width:1050px;height:760px}
+  .card{position:absolute;width:380px;margin:0;padding:12px 12px 0;background:#fbfbfb;
+    box-shadow:0 46px 100px rgba(0,0,0,.62),0 12px 30px rgba(0,0,0,.48)}
+  .card img{display:block;width:356px;height:445px;object-fit:cover}
+  .card figcaption{height:42px;display:flex;align-items:center;justify-content:center;
+    font-family:"SF Mono",Menlo,monospace;font-size:13px;letter-spacing:2.5px;color:#6b6b72}
+  .c1{left:20px;top:170px;transform:rotate(-9deg);z-index:2}
+  .c2{left:330px;top:52px;transform:rotate(2.5deg);z-index:3}
+  .c3{left:630px;top:200px;transform:rotate(10deg);z-index:4}
+
+  .foot{position:absolute;left:112px;bottom:72px;font-size:17px;letter-spacing:7px;color:#6b7288}
+  .foot-r{position:absolute;right:112px;bottom:72px;font-family:"SF Mono",Menlo,monospace;font-size:15px;letter-spacing:2.5px;color:#6b7288}
+  .rule{position:absolute;left:112px;right:112px;bottom:126px;height:1px;background:rgba(255,255,255,.07)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+  <div class="vignette"></div>
+  <div class="frame"></div>
+  <div class="topline"></div>
+
+  <div class="left">
+    <div class="brand"><span class="dot"></span> RUIC · PIXEL</div>
+    <h1><span class="l1">粗像素</span><span class="l2">讲解片</span></h1>
+    <div class="en">PIXEL EXPLAINER PIPELINE</div>
+    <p class="desc">一段口播，一条可复现的像素讲解片。</p>
+    <div class="stats">
+      <span class="num">1920×1080</span><span class="lab">画布</span><span class="sep">|</span>
+      <span class="num">30 FPS</span><span class="lab">帧率</span><span class="sep">|</span>
+      <span class="num">20 秒</span><span class="lab">成片</span>
+    </div>
+    <div class="pills">
+      <span class="pill on">A · 生图角色</span>
+      <span class="pill">B · 代码角色</span>
+      <span class="pill">逐帧 · 导出</span>
+    </div>
+  </div>
+
+  <div class="cards">
+    <figure class="card c1"><img src="card-actor.png"><figcaption>HERO · ALAN</figcaption></figure>
+    <figure class="card c2"><img src="card-small.png"><figcaption>SMALL · QUIZ</figcaption></figure>
+    <figure class="card c3"><img src="card-scene.png"><figcaption>REWARD · KEY</figcaption></figure>
+  </div>
+
+  <div class="rule"></div>
+  <div class="foot">CODE · CANVAS · PIXEL · DETERMINISTIC</div>
+  <div class="foot-r">DEMO 01 · 20s · 1920×1080</div>
+</div>
+</body>
+</html>
