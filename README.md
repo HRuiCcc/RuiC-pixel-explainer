@@ -285,4 +285,5 @@ python3 ~/.agents/registry/gen_registry.py                           # 刷新能
 <div align="center">
   <img src="assets/wechat-donate.png" width="300" alt="微信赞赏码" />
   <p><strong>微信扫码赞赏</strong></p>
+  <p>微号：<strong>hrc_rch</strong>（说明来意）</p>
 </div>
